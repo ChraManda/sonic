@@ -4,8 +4,12 @@ import 'package:sonic/providers/answer_provider.dart';
 
 import 'package:sonic/providers/auth.dart';
 import 'package:sonic/providers/quiz_session_provider.dart';
+import 'package:sonic/providers/statistics_provider.dart';
 import 'package:sonic/providers/user.dart';
 import 'package:sonic/screens/flute_screen.dart';
+import 'package:sonic/screens/quiz/interval_training_screen.dart';
+import 'package:sonic/screens/quiz/note_training_screen.dart';
+import 'package:sonic/screens/quiz/personalized_quiz_screen.dart';
 import 'package:sonic/screens/quiz/quiz_screen.dart';
 
 import 'screens/onboarding/login_screen.dart';
@@ -30,8 +34,9 @@ void main() async {
         ChangeNotifierProvider(create: (ctx) => UserProvider()),
         ChangeNotifierProvider(create: (_) => QuizSessionProvider()),
         ChangeNotifierProvider(create: (_) => AnswerProvider()),
+        ChangeNotifierProvider(create: (_) => StatisticsProvider()),
       ],
-        child: const MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -59,6 +64,9 @@ class MyApp extends StatelessWidget {
         '/virtual_piano_screen': (context) => const VirtualPiano(),
         '/quiz_screen': (context) => const QuizScreen(),
         '/flute_screen': (context) => const FluteScreen(),
+        '/personalized_quiz_screen': (context) => const PersonalizedQuizScreen(),
+        '/interval_training_screen': (context) => const IntervalTrainingScreen(),
+        '/note_training_screen': (context) => const NoteTrainingScreen(),
       },
     );
   }

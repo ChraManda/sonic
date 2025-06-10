@@ -69,6 +69,54 @@ class QuizSessionProvider with ChangeNotifier {
     }
   }
 
+  // =================================
+  // == Personalized Quiz ============
+  Future<void> startPersonalizedSession(String category, int totalQuestions) async {
+    try {
+      final url = '$host/api/v1/quizsession/personalized';
+      debugPrint("Starting quiz session at $url");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'category': category,
+          'totalQuestions': totalQuestions,
+        }),
+      );
+
+
+      debugPrint("Server responded with status: ${response.statusCode}");
+      debugPrint("Raw response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        debugPrint('Parsed session data: ${jsonEncode(data)}');
+
+        if (data['quizSession'] != null) {
+          _currentSession = QuizSession.fromJson(data['quizSession']);
+          _questions = (data['quizSession']['questions'] as List)
+              .map((q) => Question.fromJson(q))
+              .toList();
+          _responses.clear();
+          debugPrint("Session started: Quiz ID: ${_currentSession!.quizId}, Questions loaded: ${_questions.length}");
+          notifyListeners();
+        } else {
+          throw Exception("No quiz session data in response.");
+        }
+      } else {
+        throw Exception("Failed to start quiz session. Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Start session error: $e");
+      rethrow;
+    }
+  }
+  
+  //--------------------------------------------------------
   void answerQuestion({
     required Question question,
     required int selectedIndex,

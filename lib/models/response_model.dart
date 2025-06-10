@@ -20,13 +20,13 @@ class ResponseModel {
 
     if (questionData is String) {
       // It's just an ID from the backend
-      debugPrint("ℹ️ Received question ID: $questionData");
+      debugPrint("ℹReceived question ID: $questionData");
       parsedQuestion = Question(id: questionData);  // Create with just ID
     } else if (questionData is Map<String, dynamic>) {
       // Full question object
       parsedQuestion = Question.fromJson(questionData);
     } else {
-      debugPrint("❌ Invalid question data type: ${questionData.runtimeType}");
+      debugPrint("Invalid question data type: ${questionData.runtimeType}");
       throw Exception("Invalid 'question' data format");
     }
 

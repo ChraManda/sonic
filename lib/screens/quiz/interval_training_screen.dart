@@ -12,14 +12,14 @@ import '../../providers/statistics_provider.dart';
 import '../../providers/user.dart';
 import '../../reusable_widgets/reusable_widgets.dart';
 
-class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+class IntervalTrainingScreen extends StatefulWidget {
+  const IntervalTrainingScreen({super.key});
 
   @override
-  State<QuizScreen> createState() => _QuizScreenState();
+  State<IntervalTrainingScreen> createState() => _IntervalTrainingScreenState();
 }
 
-class _QuizScreenState extends State<QuizScreen> {
+class _IntervalTrainingScreenState extends State<IntervalTrainingScreen> {
   final AudioPlayer _player = AudioPlayer(); // Shared player
   final Map<String, AudioSource> _preloadedSources = {}; // Cached AudioSource
   bool isPreloading = true;
@@ -152,40 +152,6 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> _confirmQuitQuiz() async {
-    final shouldQuit = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Quit Quiz"),
-        content: const Text("Are you sure you want to quit the quiz?\nAll your progress will be lost."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Quit", style: TextStyle(color: Colors.red)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.lime),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-
-    );
-
-    if (shouldQuit == true) {
-      final quizProvider = context.read<QuizSessionProvider>();
-      final statisticsProvider = context.read<StatisticsProvider>();
-
-      await quizProvider.submitSession();
-      await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
-      await statisticsProvider.fetchStatistics();
-
-      if (mounted) Navigator.of(context).pop();
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     final quizProvider = context.watch<QuizSessionProvider>();
@@ -212,14 +178,6 @@ class _QuizScreenState extends State<QuizScreen> {
       appBar: AppBar(
         title: const Text("Ear Training Quiz"),
         centerTitle: true,
-        automaticallyImplyLeading: false, // Hides the default back arrow
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Quit Quiz',
-            onPressed: _confirmQuitQuiz,
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -234,7 +192,6 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(height: 10),
               Text("You scored $currentPoints points", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 30),
-              const Spacer(),
               CustomButton(
                 label: "Back to Home",
                 onTap: () => Navigator.of(context).pop(),
@@ -279,26 +236,14 @@ class _QuizScreenState extends State<QuizScreen> {
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children:[
+              children: [
                 correctImage != null && correctImage.isNotEmpty
-                    ? Container(
-                  height: 150,
-                  width: 250,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.black, width: 3),
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  child: Image.network(
-                    correctImage,
-                    fit: BoxFit.cover,
-                  ),
-                )
+                    ? Image.network(correctImage, height: 150, width: 140, fit: BoxFit.cover)
                     : const Icon(Icons.image_not_supported, size: 60),
-
-
-              ]
-
+                selectedImage != null && selectedImage.isNotEmpty
+                    ? Image.network(selectedImage, height: 150, width: 140, fit: BoxFit.cover)
+                    : const Icon(Icons.touch_app_outlined, size: 60),
+              ],
             ),
             const SizedBox(height: 50),
             ...List.generate(question.options?.length ?? 0, (index) {

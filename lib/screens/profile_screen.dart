@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:sonic/providers/auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../providers/statistics_provider.dart';
 import '../providers/user.dart';
 import '../reusable_widgets/reusable_widgets.dart';
 
@@ -39,190 +40,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) {
       return const Center(child: CircularProgressIndicator());
     }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
           "Your Profile",
           style: TextStyle(fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 20,
               color: Color(0xFF0D47A1)),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.settings),
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings_screen');
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-
-            // Profile Image
-            const CircleAvatar(
-              radius: 55,
-              child: Image(image: AssetImage('assets/images/logo_1.png')),
-            ),
-            const SizedBox(height: 10),
-            Text('${user.userName}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0D47A1),
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile Image
+              const CircleAvatar(
+                radius: 55,
+                child: Image(image: AssetImage('assets/images/gym.png')),
               ),
-            ),
-            Text('rodri@gmail.com${user.email}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0D47A1),
+              const SizedBox(height: 10),
+              Text('${user.userName}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D47A1),
+                ),
               ),
-            ),
-
-
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/edit_profile');
-              },
-              child: const Text("Edit", style: TextStyle(color: Colors.blue)),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Streak & Points
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildStatBox("Day Streak", "${user.streak}"
-                    , Icons.local_fire_department, Colors.red, Colors.blueAccent.shade200),
-                const SizedBox(width: 80), // Adjust spacing
-                _buildStatBox("Points", "${user.totalPoints} pts", Icons.bolt,
-                    Colors.white, Colors.blueAccent.shade200),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // Progress Bar
-            Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: (user.totalPoints / 5000),
-                    minHeight: 12,
-                    backgroundColor: const Color(0xFF4E4D4D),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFCDDC39)),
-                  ),
+              Text((user.email != null && user.email!.isNotEmpty) ? user.email! : '_@_',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D47A1),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Text(
-                    "${user.totalPoints} pts",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    const Text(
-                      'Level:',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D47A1),
+              ),
+
+
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/edit_profile');
+                },
+                child: const Text("Edit", style: TextStyle(color: Colors.blue)),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Streak & Points
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildStatBox("Day Streak", "${user.streak}"
+                      , Icons.local_fire_department, Colors.red,
+                      Colors.blueAccent.shade200),
+                  const SizedBox(width: 50), // Adjust spacing
+                  _buildStatBox("Points", "${user.totalPoints} pts", Icons.bolt,
+                      Colors.white, Colors.blueAccent.shade200),
+                ],
+              ),
+
+              const SizedBox(height: 30),
+
+              // Progress Bar
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: user.nextLevelPoints != null && user.nextLevelPoints > 0
+                              ? (user.pointsInCurrentLevel / user.nextLevelPoints).clamp(0.0, 1.0)
+                              : 0.0,
+                          minHeight: 20,
+                          backgroundColor: const Color(0xFF4E4D4D),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFCDDC39),
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${user.level}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D47A1),
+                      Text(
+                        '${user.pointsInCurrentLevel} / ${user.nextLevelPoints} pts to Level ${user.level + 1}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 30),
-
-            // Achievements Section
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Achievements",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 10),
-
-            // Fixed Achievement Container
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1.2),
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Text(
+                        'Level ',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0D47A1),
+                        ),
+                      ),
+                      Text(
+                        '${user.level}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF0D47A1),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              child: SizedBox( // Ensures it doesn’t exceed screen height
-                height: 180, // Adjust height to fit screen
-                child: GridView.count(
-                  physics: const NeverScrollableScrollPhysics(),
-                  // Prevents nested scrolling issues
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1,
-                  children: List.generate(
-                    achievementList.length,
-                        (index) =>
-                        _buildAchievementTile(
-                          achievementList[index]['imageUrl']!,
-                          achievementList[index]['title']!,
-                        ),
-                  ),
+
+
+              const SizedBox(height: 30),
+
+          // Achievements Section
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Achievements",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0D47A1)),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            SecondaryButton(
-              label: "Logout",
-              onTap: () async {
-                // Get the Auth instance using Provider
-                final auth = Provider.of<Auth>(context, listen: false);
+              const SizedBox(height: 10),
 
-                // Call the logout method
-                await auth.logout();
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildBadgeBox("🎯", "Accuracy Master", Colors.blue),
+                  _buildBadgeBox("🔥", "Streak Hero", Colors.red),
+                  _buildBadgeBox("💡", "Quick Learner", Colors.green),
+                ],
+              ),
 
-                // After logging out, navigate to the desired screen
-                Navigator.pushReplacementNamed(context, '/login_screen');
-              },
-              borderColor: Color(0xFFcddc40), // Change the outline color
-              icon: Icons.logout, // Customize the icon
-            )
-          ],
+
+              SizedBox(height: 20),
+              SecondaryButton(
+                label: "Logout",
+                onTap: () async {
+                  // Get the Auth instance using Provider
+                  final auth = Provider.of<Auth>(context, listen: false);
+
+                  // Call the logout method
+                  await auth.logout();
+
+                  // After logging out, navigate to the desired screen
+                  Navigator.pushReplacementNamed(context, '/login_screen');
+                },
+                borderColor: Color(0xFFcddc40), // Change the outline color
+                icon: Icons.logout, // Customize the icon
+              )
+            ],
+          ),
         ),
       ),
 
     );
   }
 
-  Widget _buildStatBox(String title, String value, IconData icon, Color iconColor, Color backgroundColor) {
+  Widget _buildStatBox(String title, String value, IconData icon,
+      Color iconColor, Color backgroundColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -236,9 +220,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 4),
         Container(
-          width: 120,
+          width: 145,
           height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: backgroundColor,
             border: Border.all(color: Colors.grey, width: 1.0),
@@ -274,56 +258,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
-
-
-  Widget _buildAchievementTile(String imageUrl, String title) {
-    bool isNetworkImage = imageUrl.startsWith(
-        "http"); // Check if it's a network image
-
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      elevation: 3, // Gives a slight shadow effect
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-              child: ClipOval(
-                child: isNetworkImage
-                    ? Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.music_note, size: 30, color: Colors.black),
-                )
-                    : Image.asset(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.music_note, size: 30, color: Colors.black),
+  Widget _buildBadgeBox(String emoji, String label, Color backgroundColor) {
+    return SizedBox(
+      width: 90, // Uniform width for all badge items
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: const Offset(0, 4),
+                  blurRadius: 4,
                 ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 30),
               ),
             ),
-            const SizedBox(height: 5),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 32, // Reserve enough height for up to 2 lines
+            child: Text(
+              label,
               textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis, // Handles overflow with ellipsis
-              maxLines: 1, // Prevents the text from overflowing on multiple lines
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0D47A1),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,9 @@
 import 'package:animated_toggle_switch/animated_toggle_switch.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/quiz_session_provider.dart';
 
+import '../providers/user.dart';
 import '../reusable_widgets/reusable_widgets.dart';
 
 class ReadingScreen extends StatefulWidget {
@@ -16,15 +19,19 @@ class _ReadingScreenState extends State<ReadingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: popButton(context),
         title: const Text(
           "Ear Training",
-          style: TextStyle(fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: Color(0xFF0D47A1)),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Color(0xFF0D47A1),
+          ),
         ),
       ),
       body: SafeArea(
@@ -64,17 +71,43 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 }),
               ),
             ),
+            const SizedBox(height: 16),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: selectMode
-                    ?[
-                  InstrumentCard(title: "Read Notes", image: "assets/images/logo_1.png", route: '/read_notes',),
-
-                ] :
-                [
-              InstrumentCard(title: "Read Intervals", image: "assets/images/logo_1.png",  route: '/read_intervals',),
-              ],
+                    ? [
+                  InstrumentCard(
+                    title: "Read Notes",
+                    image: "assets/images/music_reading.jpg",
+                    onTap: () => Navigator.pushNamed(context, '/read_notes'),
+                  ),
+                  InstrumentCard(
+                    title: "Train Notes",
+                    image: "assets/images/note_training.png",
+                    onTap: () async {
+                      await Provider.of<QuizSessionProvider>(context, listen: false)
+                          .startSession("note_training", 10);
+                      Navigator.pushNamed(context, '/note_training_screen');
+                    },
+                  ),
+                ]
+                    : [
+                  InstrumentCard(
+                    title: "Read Intervals",
+                    image: "assets/images/music_reading.jpg",
+                    onTap: () => Navigator.pushNamed(context, '/read_intervals'),
+                  ),
+                  InstrumentCard(
+                    title: "Train Intervals",
+                    image: "assets/images/interval_training.jpg",
+                    onTap: () async {
+                      await Provider.of<QuizSessionProvider>(context, listen: false)
+                          .startSession("interval_training", 10);
+                      Navigator.pushNamed(context, '/interval_training_screen');
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -87,23 +120,21 @@ class _ReadingScreenState extends State<ReadingScreen> {
 class InstrumentCard extends StatelessWidget {
   final String title;
   final String image;
-  final String route;
+  final VoidCallback onTap;
 
   const InstrumentCard({
     Key? key,
     required this.title,
     required this.image,
-    required this.route,
+    required this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
-        Navigator.pushNamed(context, route);
-      },
+      onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           image: DecorationImage(
@@ -119,7 +150,7 @@ class InstrumentCard extends StatelessWidget {
         child: Center(
           child: Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,

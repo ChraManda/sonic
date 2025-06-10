@@ -27,11 +27,26 @@ class QuizSession {
   });
 
   factory QuizSession.fromJson(Map<String, dynamic> json) {
+    List<Question> parseQuestions(dynamic questionsJson) {
+      if (questionsJson is List) {
+        return questionsJson.map<Question>((e) {
+          if (e is String) {
+            // Just an ID string, create Question with id only
+            return Question(id: e);
+          } else if (e is Map<String, dynamic>) {
+            // Full question object
+            return Question.fromJson(e);
+          } else {
+            throw Exception('Invalid question data: $e');
+          }
+        }).toList();
+      }
+      return [];
+    }
+
     return QuizSession(
       quizId: json['quizId'],
-      questions: (json['questions'] as List)
-          .map((e) => Question.fromJson(e))
-          .toList(),
+      questions: parseQuestions(json['questions']),
       category: json['category'],
       totalQuestions: json['totalQuestions'],
       correctAnswers: json['correctAnswers'],
@@ -46,15 +61,4 @@ class QuizSession {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'quizId': quizId,
-    'questions': questions.map((e) => e.toJson()).toList(),
-    'category': category,
-    'totalQuestions': totalQuestions,
-    'correctAnswers': correctAnswers,
-    'incorrectAnswers': incorrectAnswers,
-    'score': score,
-    'difficultyLevel': difficultyLevel,
-    'responses': responses.map((e) => e.toJson()).toList(),
-  };
 }

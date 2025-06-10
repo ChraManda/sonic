@@ -7,6 +7,8 @@ import 'package:sonic/providers/auth.dart';
 import 'package:sonic/providers/user.dart';
 
 import '../../providers/quiz_session_provider.dart';
+import '../../providers/statistics_provider.dart';
+import '../../reusable_widgets/reusable_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -109,6 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
           final answerProvider = Provider.of<AnswerProvider>(context, listen: false);
           answerProvider.update(data['token']);
 
+          final statsProvider = Provider.of<StatisticsProvider>(context, listen: false);
+          statsProvider.update(data['token']);
+          await statsProvider.fetchStatistics();
+
           final auth = Provider.of<Auth>(context, listen: false);
 
           setState(() {
@@ -148,90 +154,117 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    'Sign In',
-                    style: Theme.of(context).textTheme.displaySmall,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  const SizedBox(height: 40,),
+                  Center(
+                    child: SizedBox(
+                      height: 170,
+                      child: Image.asset(
+                        'assets/images/logo_1.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      'Sign In',
+                      style: TextStyle(color: Color(0xFF0D47A1), fontSize: 32, fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Enter your phone number to continue',
+                    style: TextStyle(color: Color(0xFF0D47A1), fontSize: 18, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Enter your phone number to continue',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                !_showOTP
-                    ? Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: TextFormField(
-                      autofocus: true,
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter Your Phone Number',
-                        prefixIcon: Icon(Icons.phone_outlined),
+                  const SizedBox(height: 32),
+                  !_showOTP
+                      ? Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: TextFormField(
+                        autofocus: true,
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter Your Phone Number',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return 'Please enter your mobile number';
+                          } else if (value.length != 10) {
+                            return 'Please enter a valid mobile number';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _phoneController.text = value!;
+                        },
+                        onFieldSubmitted: (value) {
+                          if (_formKey.currentState!.validate()) {
+                            _formKey.currentState!.save();
+                            _sendOTP();
+                          }
+                        },
+                      ))
+                      : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: TextFormField(
+                          autofocus: true,
+                          controller: _otpController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter Your OTP',
+                          ),
+                        ),
                       ),
-                      validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Please enter your mobile number';
-                        } else if (value.length != 10) {
-                          return 'Please enter a valid mobile number';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        _phoneController.text = value!;
-                      },
-                      onFieldSubmitted: (value) {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          _sendOTP();
-                        }
-                      },
-                    ))
-                    : Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: TextFormField(
-                    autofocus: true,
-                    controller: _otpController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter Your OTP',
+                      TextButton(
+                        onPressed: _isLoading ? null : _sendOTP,
+                        child: const Text('Resend OTP'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF0D47A1),
+                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+          
+                  const SizedBox(height: 50,),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        label: _isLoading
+                            ? "Loading..."
+                            : "Continue",
+                        onTap: () {
+                          if (_isLoading) return;
+                          if (_showOTP) {
+                            _verifyOTP();
+                          } else {
+                            _sendOTP();
+                          }
+                        },
+                        color: const Color(0xFFcddc40),
+                      ),
                     ),
                   ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_isLoading) return;
-                        if (_showOTP) {
-                          _verifyOTP();
-                        } else {
-                          _sendOTP();
-                        }
-                      },
-                      child: _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Continue'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
         ),

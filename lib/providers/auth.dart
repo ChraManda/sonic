@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sonic/constants/address_constants.dart';
 import 'package:sonic/providers/quiz_session_provider.dart';
+import 'package:sonic/providers/statistics_provider.dart';
 import 'package:sonic/providers/user.dart';
 import 'package:provider/provider.dart';
 
@@ -190,6 +191,10 @@ class Auth with ChangeNotifier {
 
         final answerProvider = Provider.of<AnswerProvider>(context, listen: false);
         answerProvider.update(_token);
+
+        final statsProvider = Provider.of<StatisticsProvider>(context, listen: false);
+        statsProvider.update(_token);
+        await statsProvider.fetchStatistics();
 
         debugPrint("Auto login successful.");
         return true;

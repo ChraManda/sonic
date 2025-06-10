@@ -22,7 +22,7 @@ class _PianoScreenState extends State<PianoScreen> {
           "Instrument Sounds",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 20,
             color: Color(0xFF0D47A1),
           ),
         ),
@@ -41,6 +41,51 @@ class _PianoScreenState extends State<PianoScreen> {
                   InstrumentCard(title: "Harp", image: "assets/images/harp_image.jpg", route: '/virtual_piano_screen',),
                   InstrumentCard(title: "Piano Synth", image: "assets/images/piano_synth.jpeg", route: '/virtual_piano_screen',),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class InstrumentCard extends StatelessWidget {
+  final String title;
+  final String image;
+  final String route;
+
+  const InstrumentCard({
+    Key? key,
+    required this.title,
+    required this.image,
+    required this.route,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          image: DecorationImage(
+            image: AssetImage(image),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.4),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        height: 130,
+        child: Center(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
       ),

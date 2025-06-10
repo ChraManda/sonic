@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/user.dart';
 import '../reusable_widgets/reusable_widgets.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -13,11 +13,47 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _emailTextController = TextEditingController();
   final TextEditingController _usernameTextController = TextEditingController();
-  final TextEditingController _fullNameTextController = TextEditingController();
+  final TextEditingController _phoneTextController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user != null) {
+      _emailTextController.text = user.email!;
+      _usernameTextController.text = user.userName;
+      _phoneTextController.text = user.phone;
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+    if (user == null) return;
+
+    final success = await userProvider.updateUserDetails(
+      userId: user.id,
+      userName: _usernameTextController.text.trim(),
+      email: _emailTextController.text.trim(),
+      phone: _phoneTextController.text.trim(),
+    );
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully")),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to update profile")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -26,7 +62,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           "Edit Profile",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 20,
             color: Color(0xFF0D47A1),
           ),
         ),
@@ -37,9 +73,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Align labels to left
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile Image
             const Center(
               child: CircleAvatar(
                 radius: 55,
@@ -48,17 +83,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Email and Username Display
-            const Center(
+            Center(
               child: Column(
                 children: [
                   Text(
-                    "email.@.com",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    user?.email ?? '',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   Text(
-                    "Username",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    user?.userName ?? '',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -66,9 +100,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // Username Input
-            buildLabel("Full Name"),
-            resusableTextField("Full name", Icons.person_outline, false, _fullNameTextController),
+            buildLabel("Phone"),
+            resusableTextField("Phone", Icons.phone, false, _phoneTextController),
             const SizedBox(height: 10),
 
             buildLabel("Email"),
@@ -80,14 +113,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             const SizedBox(height: 20),
 
-            // Buttons
             CustomButton(
               label: "Save Changes",
-              onTap: () {},
+              onTap: _saveChanges,
               color: const Color(0xFFcddc40),
               icon: Icons.save,
             ),
-
           ],
         ),
       ),
